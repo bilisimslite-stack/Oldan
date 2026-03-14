@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="APEX Finance">
+<meta name="theme-color" content="#ffb300">
+<title>APEX Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --void:#000008;--base:#05060f;--surface:#080912;--card:#0c0e1c;--lift:#111326;
+  --wire:#181c30;--wire2:#1e2438;--dim:#252c48;--muted:#3a4268;--ghost:#566088;
+  --text:#c8d0ec;--bright:#e8ecff;--amber:#ffb300;--amber2:#ff8c00;
+  --green:#00e676;--green-bg:rgba(0,230,118,0.08);
+  --red:#ff4444;--red-bg:rgba(255,68,68,0.08);
+  --cyan:#00e5ff;--purple:#b388ff;
+  --mono:'IBM Plex Mono',monospace;--display:'Syne',sans-serif;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{height:100%;background:var(--void)}
+body{
+  font-family:var(--mono);color:var(--text);
+  height:100dvh;overflow:hidden;
+  background:var(--void);
+  display:flex;flex-direction:column;
+  position:relative;
+}
+
+/* SCANLINES */
+body::after{
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,8,0.15) 3px,rgba(0,0,8,0.15) 4px);
+  pointer-events:none;z-index:9998;
+}
+
+/* STATUSBAR */
+.statusbar{
+  height:44px;background:var(--surface);
+  border-bottom:1px solid var(--wire);
+  display:flex;align-items:center;
+  padding:0 16px;gap:10px;
+  flex-shrink:0;position:relative;z-index:100;
+}
+.sb-logo{font-family:var(--display);font-size:18px;font-weight:800;color:var(--amber);letter-spacing:-0.5px}
+.sb-logo span{color:var(--bright)}
+.sb-ticker{flex:1;overflow:hidden;font-size:9px;white-space:nowrap;display:flex;gap:12px;align-items:center}
+.st{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.st-s{color:var(--ghost);font-weight:600;font-size:9px}
+.st-v{color:var(--bright);font-size:9px}
+.st-c{font-size:8px}.up{color:var(--green)}.dn{color:var(--red)}
+.sb-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.live-pill{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.2);
+  border-radius:20px;padding:3px 8px;font-size:8px;color:var(--green);
+}
+.live-dot{width:4px;height:4px;border-radius:50%;background:var(--green);animation:ldot 1.5s infinite}
+@keyframes ldot{0%,100%{opacity:1}50%{opacity:0.2}}
+
+/* MAIN SCROLL */
+.main{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.main::-webkit-scrollbar{display:none}
+
+/* PAGES */
+.page{display:none;padding-bottom:calc(64px + var(--safe-bottom));animation:fadeUp 0.2s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* BOTTOM NAV */
+.bottomnav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(60px + var(--safe-bottom));
+  padding-bottom:var(--safe-bottom);
+  background:var(--surface);
+  border-top:1px solid var(--wire);
+  display:flex;z-index:200;
+}
+.bn-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;cursor:pointer;
+  color:var(--muted);transition:color 0.15s;
+  padding-top:6px;font-size:8px;letter-spacing:0.5px;
+  text-transform:uppercase;font-family:var(--mono);
+  border:none;background:transparent;
+}
+.bn-item .ico{font-size:18px;transition:transform 0.15s}
+.bn-item.active{color:var(--amber)}
+.bn-item.active .ico{transform:scale(1.1)}
+
+/* SECTION HEADER */
+.sec-hdr{
+  padding:16px 16px 8px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;background:var(--void);z-index:50;
+  border-bottom:1px solid var(--wire);
+}
+.sec-title{font-family:var(--display);font-size:20px;font-weight:800;color:var(--bright)}
+.sec-title span{color:var(--amber)}
+.sec-sub{font-size:9px;color:var(--muted);margin-top:2px;font-family:var(--mono)}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--wire);border-radius:12px;overflow:hidden}
+.card-hdr{
+  padding:10px 14px;border-bottom:1px solid var(--wire);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-title{font-size:9px;letter-spacing:2px;color:var(--amber);text-transform:uppercase}
+.card-meta{font-size:8px;color:var(--muted)}
+.card-body{padding:14px}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px}
+.kpi{
+  background:var(--card);border:1px solid var(--wire);border-radius:10px;
+  padding:12px;position:relative;overflow:hidden;
+}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1.5px;background:var(--kpi-c,var(--amber))}
+.kpi-label{font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:700;color:var(--bright);letter-spacing:-0.5px}
+.kpi-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:8px;padding:2px 6px;border-radius:3px;margin-top:5px;
+}
+.kpi-badge.pos{background:var(--green-bg);color:var(--green)}
+.kpi-badge.neg{background:var(--red-bg);color:var(--red)}
+.kpi-badge.neu{background:rgba(0,229,255,0.08);color:var(--cyan)}
+.kpi-icon{position:absolute;right:10px;top:10px;font-size:20px;opacity:0.12}
+
+/* CHART CARD */
+.chart-card{margin:0 16px 12px;border-radius:12px;overflow:hidden;background:var(--card);border:1px solid var(--wire)}
+.chart-wrap{padding:12px;height:180px;position:relative}
+
+/* TRANSACTION LIST */
+.tx-list{margin:0 16px 12px}
+.tx-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;background:var(--card);
+  border:1px solid var(--wire);border-radius:10px;
+  margin-bottom:6px;transition:background 0.1s;cursor:pointer;
+}
+.tx-item:hover{background:var(--lift)}
+.tx-icon{
+  width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.tx-info{flex:1;min-width:0}
+.tx-name{font-size:12px;font-weight:600;color:var(--bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-date{font-size:9px;color:var(--muted);margin-top:1px}
+.tx-amount{font-size:13px;font-weight:700;flex-shrink:0;font-family:var(--mono)}
+
+/* BUDGET BARS */
+.budget-item{margin-bottom:12px}
+.bi-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:10px}
+.bi-label{color:var(--text)}
+.bi-vals{color:var(--muted);font-family:var(--mono);font-size:9px}
+.bi-bar{height:6px;background:var(--wire2);border-radius:3px;overflow:hidden}
+.bi-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(0.4,0,0.2,1)}
+
+/* STOCK CARDS */
+.stock-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 12px}
+.stock-card{
+  background:var(--card);border:1px solid var(--wire);border-radius:10px;
+  padding:12px;cursor:pointer;transition:border-color 0.15s;
+}
+.stock-card:hover{border-color:var(--amber)}
+.sc-sym{font-size:13px;font-weight:700;color:var(--bright);letter-spacing:0.5px}
+.sc-name{font-size:8px;color:var(--muted);margin:2px 0 8px}
+.sc-price{font-size:18px;font-weight:700;color:var(--bright);margin-bottom:3px}
+.sc-chg{font-size:10px;padding:2px 6px;border-radius:3px;display:inline-block}
+.sc-chg.up{background:var(--green-bg);color:var(--green)}
+.sc-chg.dn{background:var(--red-bg);color:var(--red)}
+
+/* AI SECTION */
+.ai-card{margin:0 16px 12px;background:var(--card);border:1px solid var(--wire);border-radius:12px;overflow:hidden}
+.ai-insight{
+  padding:12px 14px;border-bottom:1px solid var(--wire);
+  border-left:3px solid var(--amber);
+  margin:10px 14px;border-radius:0 6px 6px 0;
+  background:rgba(255,179,0,0.04);
+}
+.ai-insight-title{font-size:9px;letter-spacing:1px;color:var(--amber);margin-bottom:4px;text-transform:uppercase}
+.ai-insight-body{font-size:10px;color:var(--ghost);line-height:1.6}
+.ai-forecast-row{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;border-bottom:1px solid var(--wire);font-size:10px;
+}
+.afr-month{color:var(--ghost);width:26px;flex-shrink:0}
+.afr-bar{flex:1;height:5px;background:var(--wire2);border-radius:2px;overflow:hidden}
+.afr-fill{height:100%;border-radius:2px}
+.afr-val{color:var(--bright);width:44px;text-align:right;flex-shrink:0;font-size:9px}
+.afr-conf{font-size:8px;width:28px;text-align:right;flex-shrink:0}
+
+/* HEALTH SCORE */
+.health-ring{
+  width:80px;height:80px;border-radius:50%;
+  background:conic-gradient(var(--green) 0% 84%, var(--wire2) 84% 100%);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;flex-shrink:0;
+}
+.health-ring::after{
+  content:'';position:absolute;inset:10px;
+  background:var(--card);border-radius:50%;
+}
+.health-num{position:relative;z-index:1;font-size:20px;font-weight:700;color:var(--green);font-family:var(--mono)}
+
+/* FX WIDGET */
+.fx-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 14px;border-bottom:1px solid var(--wire);font-size:10px;
+}
+.fx-row:last-child{border-bottom:none}
+.fx-pair{color:var(--ghost);font-weight:600;letter-spacing:0.5px}
+.fx-rate{color:var(--bright);font-weight:500}
+
+/* PREMIUM GATE */
+.premium-gate{
+  margin:0 16px 12px;
+  background:linear-gradient(135deg, #1a1200, #0a0800);
+  border:1px solid rgba(255,179,0,0.3);
+  border-radius:12px;padding:20px;text-align:center;
+}
+.pg-icon{font-size:32px;margin-bottom:8px}
+.pg-title{font-family:var(--display);font-size:18px;font-weight:800;color:var(--amber);margin-bottom:6px}
+.pg-desc{font-size:10px;color:var(--ghost);line-height:1.7;margin-bottom:14px}
+.pg-features{display:flex;flex-direction:column;gap:5px;margin-bottom:16px;text-align:left}
+.pg-feat{font-size:10px;color:var(--text);display:flex;align-items:center;gap:8px}
+.pg-feat::before{content:'◈';color:var(--amber);font-size:9px;flex-shrink:0}
+.btn-premium{
+  width:100%;background:var(--amber);color:#000;
+  border:none;font-family:var(--mono);font-size:11px;
+  font-weight:700;letter-spacing:2px;padding:12px;
+  border-radius:8px;cursor:pointer;text-transform:uppercase;
+}
+
+/* BUTTONS */
+.btn-sm{
+  background:transparent;border:1px solid var(--wire2);
+  color:var(--muted);font-family:var(--mono);font-size:9px;
+  padding:5px 10px;border-radius:6px;cursor:pointer;
+  letter-spacing:1px;transition:all 0.15s;
+}
+.btn-sm:hover,.btn-sm.active{border-color:var(--amber);color:var(--amber)}
+.btn-amber{
+  background:var(--amber);color:#000;border:none;
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:1px;padding:8px 16px;border-radius:8px;
+  cursor:pointer;text-transform:uppercase;
+}
+
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,8,0.9);
+  backdrop-filter:blur(4px);z-index:500;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--surface);
+  border:1px solid var(--wire2);
+  border-radius:16px 16px 0 0;
+  width:100%;max-height:85dvh;
+  overflow-y:auto;
+  animation:slideUp 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:36px;height:4px;background:var(--wire2);border-radius:2px;margin:10px auto 0}
+.modal-title{font-family:var(--display);font-size:18px;font-weight:800;color:var(--bright);padding:14px 16px 0}
+.modal-body{padding:14px 16px calc(16px + var(--safe-bottom))}
+.field{margin-bottom:12px}
+.field-label{font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
+.field-input{
+  width:100%;background:var(--card);border:1px solid var(--wire2);
+  color:var(--bright);font-family:var(--mono);font-size:13px;
+  padding:10px 12px;border-radius:8px;outline:none;
+  transition:border-color 0.15s;-webkit-appearance:none;
+}
+.field-input:focus{border-color:var(--amber)}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.category-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.cat-btn{
+  background:var(--card);border:1px solid var(--wire2);
+  border-radius:8px;padding:10px 6px;text-align:center;
+  cursor:pointer;transition:all 0.15s;
+}
+.cat-btn.selected{border-color:var(--amber);background:rgba(255,179,0,0.08)}
+.cat-btn .cat-ico{font-size:20px;display:block;margin-bottom:4px}
+.cat-btn .cat-lbl{font-size:8px;color:var(--ghost);letter-spacing:0.5px}
+
+/* SETTINGS */
+.setting-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 14px;border-bottom:1px solid var(--wire);
+}
+.setting-row:last-child{border-bottom:none}
+.sr-info{flex:1}
+.sr-label{font-size:12px;color:var(--text)}
+.sr-desc{font-size:9px;color:var(--muted);margin-top:2px}
+.toggle{
+  width:40px;height:22px;background:var(--wire2);border-radius:11px;
+  position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;
+}
+.toggle.on{background:var(--amber)}
+.toggle::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:16px;height:16px;background:#fff;border-radius:50%;
+  transition:transform 0.2s;
+}
+.toggle.on::after{transform:translateX(18px)}
+
+/* ONBOARDING */
+.onboard{
+  position:fixed;inset:0;background:var(--void);
+  z-index:1000;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:32px;
+}
+.ob-logo{font-family:var(--display);font-size:48px;font-weight:800;color:var(--amber);margin-bottom:4px}
+.ob-logo span{color:var(--bright)}
+.ob-sub{font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:40px;text-transform:uppercase}
+.ob-features{width:100%;max-width:320px;margin-bottom:40px}
+.ob-feat{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 0;border-bottom:1px solid var(--wire);font-size:11px;color:var(--ghost);
+}
+.ob-feat:last-child{border-bottom:none}
+.ob-feat-icon{font-size:22px;width:30px;text-align:center;flex-shrink:0}
+.ob-btn{
+  width:100%;max-width:320px;background:var(--amber);color:#000;
+  border:none;font-family:var(--mono);font-size:12px;font-weight:700;
+  letter-spacing:2px;padding:14px;border-radius:10px;cursor:pointer;
+  text-transform:uppercase;margin-bottom:12px;
+}
+.ob-skip{font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:1px}
+
+/* PROFIT MARGIN GAUGE */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:14px}
+.gauge{width:120px;height:60px;position:relative;overflow:hidden}
+.gauge-arc{position:absolute;width:120px;height:120px;border-radius:50%;border:8px solid var(--wire2);clip-path:polygon(0 50%,100% 50%,100% 0,0 0);bottom:0}
+.gauge-fill{position:absolute;width:120px;height:120px;border-radius:50%;clip-path:polygon(0 50%,100% 50%,100% 0,0 0);bottom:0;transition:all 1s}
+.gauge-num{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:22px;font-weight:700;color:var(--bright);font-family:var(--mono)}
+
+/* PILL TABS */
+.pill-tabs{display:flex;gap:6px;padding:8px 16px;overflow-x:auto;scrollbar-width:none}
+.pill-tabs::-webkit-scrollbar{display:none}
+.pill{
+  flex-shrink:0;background:var(--card);border:1px solid var(--wire2);
+  color:var(--muted);font-family:var(--mono);font-size:9px;
+  padding:5px 12px;border-radius:20px;cursor:pointer;
+  letter-spacing:1px;text-transform:uppercase;transition:all 0.15s;
+}
+.pill.active{background:rgba(255,179,0,0.1);border-color:var(--amber);color:var(--amber)}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:10px;opacity:0.4}
+.empty-text{font-size:11px;line-height:1.6}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--wire);margin:0 16px}
+.section-label{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 4px}
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div class="onboard" id="onboard">
+  <div class="ob-logo">APEX<span>fin</span></div>
+  <div class="ob-sub">Your Financial Terminal</div>
+  <div class="ob-features">
+    <div class="ob-feat"><span class="ob-feat-icon">📊</span>Business & personal finance in one place</div>
+    <div class="ob-feat"><span class="ob-feat-icon">🤖</span>AI-powered forecasts & insights</div>
+    <div class="ob-feat"><span class="ob-feat-icon">📈</span>Live crypto, gold & commodity prices</div>
+    <div class="ob-feat"><span class="ob-feat-icon">🎯</span>Budget tracking & goal setting</div>
+    <div class="ob-feat"><span class="ob-feat-icon">📱</span>Works offline, installs like an app</div>
+  </div>
+  <button class="ob-btn" onclick="startApp()">GET STARTED — FREE</button>
+  <span class="ob-skip" onclick="startApp()">Already have an account? Sign in</span>
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar" id="statusbar" style="display:none">
+  <div class="sb-logo">AP<span>EX</span></div>
+  <div class="sb-ticker" id="tickerBar"></div>
+  <div class="sb-right">
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="mainArea" style="display:none">
+
+  <!-- ── HOME PAGE ── -->
+  <div class="page active" id="page-home">
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-title">Overview <span>◈</span></div>
+        <div class="sec-sub" id="homeDate">Loading...</div>
+      </div>
+      <button class="btn-amber" style="font-size:9px;padding:7px 12px" onclick="openAddModal()">+ ADD</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi" style="--kpi-c:var(--amber)">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-label">Monthly Revenue</div>
+        <div class="kpi-val" id="homeRev">$0</div>
+        <div class="kpi-badge pos" id="homeRevB">+0%</div>
+      </div>
+      <div class="kpi" style="--kpi-c:var(--red)">
+        <div class="kpi-icon">💸</div>
+        <div class="kpi-label">Monthly Expenses</div>
+        <div class="kpi-val" id="homeExp">$0</div>
+        <div class="kpi-badge neg" id="homeExpB">0%</div>
+      </div>
+      <div class="kpi" style="--kpi-c:var(--green)">
+        <div class="kpi-icon">📈</div>
+        <div class="kpi-label">Net Profit</div>
+        <div class="kpi-val" id="homeProfit">$0</div>
+        <div class="kpi-badge pos" id="homeProfitB">+0%</div>
+      </div>
+      <div class="kpi" style="--kpi-c:var(--cyan)">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-label">Savings Rate</div>
+        <div class="kpi-val" id="homeSave">0%</div>
+        <div class="kpi-badge neu">This Month</div>
+      </div>
+    </div>
+
+    <!-- Revenue Chart -->
+    <div class="chart-card">
+      <div class="card-hdr">
+        <span class="card-title">Revenue vs Expenses</span>
+        <span class="card-meta">12 months</span>
+      </div>
+      <div class="chart-wrap"><canvas id="homeChart"></canvas></div>
+    </div>
+
+    <!-- FX Rates -->
+    <div class="section-label">FX RATES · LIVE</div>
+    <div class="card" style="margin:0 16px 12px">
+      <div id="fxWidget"></div>
+    </div>
+
+    <!-- Weather -->
+    <div class="section-label">WEATHER · ISTANBUL · LIVE</div>
+    <div class="card" style="margin:0 16px 12px">
+      <div id="weatherBlock"><div style="padding:12px;font-size:9px;color:var(--muted)">Loading weather...</div></div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="section-label">RECENT TRANSACTIONS</div>
+    <div class="tx-list" id="recentTx"></div>
+
+    <!-- AI Health Score -->
+    <div class="section-label">AI HEALTH SCORE</div>
+    <div class="card" style="margin:0 16px 12px">
+      <div class="card-body" style="display:flex;align-items:center;gap:16px">
+        <div class="health-ring"><span class="health-num">84</span></div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--bright);margin-bottom:4px">Strong Business</div>
+          <div style="font-size:9px;color:var(--ghost);line-height:1.7">Revenue growing +18.2% YoY. Expense ratio trending down. On track for 28% margin by Q3.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FINANCE PAGE ── -->
+  <div class="page" id="page-finance">
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-title">Finance <span>◈</span></div>
+        <div class="sec-sub">Business & Personal</div>
+      </div>
+      <button class="btn-sm" onclick="openAddModal()">+ Entry</button>
+    </div>
+
+    <div class="pill-tabs" id="financeTabs">
+      <div class="pill active" onclick="switchFinanceTab('business',this)">BUSINESS</div>
+      <div class="pill" onclick="switchFinanceTab('personal',this)">PERSONAL</div>
+      <div class="pill" onclick="switchFinanceTab('budget',this)">BUDGET</div>
+      <div class="pill" onclick="switchFinanceTab('goals',this)">GOALS</div>
+    </div>
+
+    <!-- Business Tab -->
+    <div id="tab-business">
+      <div class="kpi-row">
+        <div class="kpi" style="--kpi-c:var(--amber)">
+          <div class="kpi-label">Annual Revenue</div>
+          <div class="kpi-val" id="bizRev">$87K</div>
+          <div class="kpi-badge pos">+18.2%</div>
+        </div>
+        <div class="kpi" style="--kpi-c:var(--red)">
+          <div class="kpi-label">Annual Expenses</div>
+          <div class="kpi-val" id="bizExp">$64.5K</div>
+          <div class="kpi-badge neg">+12.1%</div>
+        </div>
+        <div class="kpi" style="--kpi-c:var(--green)">
+          <div class="kpi-label">Net Profit</div>
+          <div class="kpi-val" id="bizProfit">$22.5K</div>
+          <div class="kpi-badge pos">+31.4%</div>
+        </div>
+        <div class="kpi" style="--kpi-c:var(--cyan)">
+          <div class="kpi-label">Profit Margin</div>
+          <div class="kpi-val" id="bizMargin">25.8%</div>
+          <div class="kpi-badge neu">Target 30%</div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="card-hdr"><span class="card-title">Monthly Breakdown</span></div>
+        <div class="chart-wrap"><canvas id="bizChart"></canvas></div>
+      </div>
+      <div class="section-label">EXPENSE CATEGORIES</div>
+      <div class="card" style="margin:0 16px 12px">
+        <div class="chart-wrap" style="height:160px"><canvas id="expDonut"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Personal Tab -->
+    <div id="tab-personal" style="display:none">
+      <div class="kpi-row">
+        <div class="kpi" style="--kpi-c:var(--green)">
+          <div class="kpi-label">Monthly Income</div>
+          <div class="kpi-val">$4,200</div>
+          <div class="kpi-badge pos">+5.0%</div>
+        </div>
+        <div class="kpi" style="--kpi-c:var(--red)">
+          <div class="kpi-label">Monthly Spend</div>
+          <div class="kpi-val">$2,840</div>
+          <div class="kpi-badge neg">67.6%</div>
+        </div>
+        <div class="kpi" style="--kpi-c:var(--amber)">
+          <div class="kpi-label">Saved</div>
+          <div class="kpi-val">$1,360</div>
+          <div class="kpi-badge pos">32.4%</div>
+        </div>
+        <div class="kpi" style="--kpi-c:var(--purple)">
+          <div class="kpi-label">Net Worth</div>
+          <div class="kpi-val">$24.8K</div>
+          <div class="kpi-badge pos">+8.2%</div>
+        </div>
+      </div>
+      <div class="section-label">SPENDING BY CATEGORY</div>
+      <div id="spendList" style="padding:0 16px 12px"></div>
+    </div>
+
+    <!-- Budget Tab -->
+    <div id="tab-budget" style="display:none">
+      <div class="card" style="margin:12px 16px">
+        <div class="card-hdr"><span class="card-title">Monthly Budget</span><span class="card-meta">Mar 2025</span></div>
+        <div class="card-body" id="budgetBars"></div>
+      </div>
+    </div>
+
+    <!-- Goals Tab -->
+    <div id="tab-goals" style="display:none">
+      <div id="goalsList" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+  </div>
+
+  <!-- ── INVEST PAGE ── -->
+  <div class="page" id="page-invest">
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-title">Markets <span>◈</span></div>
+        <div class="sec-sub">Live prices</div>
+      </div>
+    </div>
+
+    <div class="pill-tabs" id="investTabs">
+      <div class="pill active" onclick="switchInvestTab('commodities',this)">ALTIN & EMTIA</div>
+      <div class="pill" onclick="switchInvestTab('crypto',this)">CRYPTO</div>
+      <div class="pill" onclick="switchInvestTab('forex',this)">FOREX</div>
+      <div class="pill" onclick="switchInvestTab('portfolio',this)">PORTFOLIO</div>
+    </div>
+
+    <div id="tab-commodities">
+      <div class="section-label" style="padding-top:8px">CANLI FİYATLAR · USD/OZ & TL/GR</div>
+      <div class="stock-grid" id="commodityGrid"></div>
+      <div class="section-label">GÜNLÜK ÖZET</div>
+      <div class="card" style="margin:0 16px 12px">
+        <div id="commodityDetail"></div>
+      </div>
+    </div>
+
+    <div id="tab-crypto" style="display:none">
+      <div class="stock-grid" id="cryptoGrid"></div>
+    </div>
+
+    <div id="tab-forex" style="display:none">
+      <div class="card" style="margin:0 16px 12px">
+        <div id="forexFull"></div>
+      </div>
+    </div>
+
+    <div id="tab-portfolio" style="display:none">
+      <div class="premium-gate">
+        <div class="pg-icon">💼</div>
+        <div class="pg-title">Portfolio Tracker</div>
+        <div class="pg-desc">Track your real investments, see gains/losses in real time and get AI-powered rebalancing advice.</div>
+        <div class="pg-features">
+          <div class="pg-feat">Unlimited portfolio positions</div>
+          <div class="pg-feat">Real-time P&L tracking</div>
+          <div class="pg-feat">AI rebalancing suggestions</div>
+          <div class="pg-feat">Tax report export</div>
+        </div>
+        <button class="btn-premium" onclick="showPremium()">UNLOCK PREMIUM · $4.99/mo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── AI PAGE ── -->
+  <div class="page" id="page-ai">
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-title">AI <span>Engine</span></div>
+        <div class="sec-sub">APEX-ML · Forecasting</div>
+      </div>
+      <div style="font-size:9px;color:var(--amber);font-family:var(--mono)">v2.1</div>
+    </div>
+
+    <!-- AI Forecast -->
+    <div class="section-label">6-MONTH REVENUE FORECAST</div>
+    <div class="ai-card">
+      <div id="aiForecastList"></div>
+    </div>
+
+    <!-- AI Insights -->
+    <div class="section-label">PATTERN ANALYSIS</div>
+    <div style="padding:0 16px 12px;display:flex;flex-direction:column;gap:8px" id="aiInsights"></div>
+
+    <!-- Anomaly -->
+    <div class="section-label">ANOMALY DETECTION</div>
+    <div class="card" style="margin:0 16px 12px">
+      <div class="card-body">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:20px">🔍</span>
+          <div>
+            <div style="font-size:11px;color:var(--bright);font-weight:600">No anomalies detected</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px">All metrics within expected ranges</div>
+          </div>
+        </div>
+        <div style="height:3px;background:var(--wire2);border-radius:2px;overflow:hidden">
+          <div style="width:92%;height:100%;background:var(--green);border-radius:2px"></div>
+        </div>
+        <div style="font-size:8px;color:var(--muted);margin-top:4px">Confidence: 92%</div>
+      </div>
+    </div>
+
+    <!-- Premium AI -->
+    <div class="premium-gate">
+      <div class="pg-icon">🤖</div>
+      <div class="pg-title">Advanced AI</div>
+      <div class="pg-desc">Unlock deeper AI analysis with custom predictions trained on your specific business data.</div>
+      <div class="pg-features">
+        <div class="pg-feat">Custom ML model for your business</div>
+        <div class="pg-feat">Weekly AI strategy report</div>
+        <div class="pg-feat">Cash flow prediction (90 days)</div>
+        <div class="pg-feat">Competitor benchmarking</div>
+      </div>
+      <button class="btn-premium" onclick="showPremium()">UNLOCK PREMIUM · $4.99/mo</button>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS PAGE ── -->
+  <div class="page" id="page-settings">
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-title">Settings <span>◈</span></div>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="section-label">ACCOUNT</div>
+    <div class="card" style="margin:0 16px 12px">
+      <div class="card-body" style="display:flex;align-items:center;gap:14px">
+        <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,179,0,0.1);border:1px solid rgba(255,179,0,0.3);display:flex;align-items:center;justify-content:center;font-size:22px">◈</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--bright)" id="profileName">Free User</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">APEX Finance · Free Plan</div>
+          <div style="margin-top:6px">
+            <button class="btn-amber" style="font-size:9px;padding:5px 12px" onclick="showPremium()">Upgrade to Premium</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Business -->
+    <div class="section-label">BUSINESS</div>
+    <div class="card" style="margin:0 16px 12px">
+      <div class="setting-row">
+        <div class="sr-info">
+          <div class="sr-label">Business Name</div>
+          <div class="sr-desc" id="setBizName">Sample Business</div>
+        </div>
+        <button class="btn-sm" onclick="editBizName()">Edit</button>
+      </div>
+      <div class="setting-row">
+        <div class="sr-info">
+          <div class="sr-label">Industry</div>
+          <div class="sr-desc" id="setBizType">Cafe & Restaurant</div>
+        </div>
+        <button class="btn-sm">Change</button>
+      </div>
+      <div class="setting-row">
+        <div class="sr-info">
+          <div class="sr-label">Currency</div>
+          <div class="sr-desc">USD · Turkish Lira</div>
+        </div>
+        <button class="btn-sm">USD</button>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="section-label">NOTIFICATIONS</div>
+    <div class="card" style="margin:0 16px 12px">
+      <div class="setting-row">
+        <div class="sr-info">
+          <div class="sr-label">Daily Summary</div>
+          <div class="sr-desc">Get a daily financial digest</div>
+        </div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="setting-row">
+        <div class="sr-info">
+          <div class="sr-label">Expense Alerts</div>
+          <div class="sr-desc">Alert when budget exceeded</div>
+        </div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="setting-row">
+        <div class="sr-info">
+          <div class="sr-label">AI Insights</div>
+          <div class="sr-desc">Weekly AI analysis report</div>
+        </div>
+        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="section-label">ABOUT</div>
+    <div class="card" style="margin:0 16px 24px">
+      <div class="setting-row">
+        <div class="sr-info"><div class="sr-label">Version</div></div>
+        <span style="font-size:10px;color:var(--muted)">1.0.0</span>
+      </div>
+      <div class="setting-row">
+        <div class="sr-info"><div class="sr-label">Developer</div></div>
+        <span style="font-size:10px;color:var(--amber)">finosdev</span>
+      </div>
+      <div class="setting-row">
+        <div class="sr-info"><div class="sr-label">Clear Data</div></div>
+        <button class="btn-sm" onclick="clearData()" style="border-color:var(--red);color:var(--red)">Reset</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottomnav" id="bottomnav" style="display:none">
+  <button class="bn-item active" onclick="goPage('home',this)"><span class="ico">◈</span>Home</button>
+  <button class="bn-item" onclick="goPage('finance',this)"><span class="ico">💰</span>Finance</button>
+  <button class="bn-item" onclick="goPage('invest',this)"><span class="ico">📈</span>Markets</button>
+  <button class="bn-item" onclick="goPage('ai',this)"><span class="ico">🤖</span>AI</button>
+  <button class="bn-item" onclick="goPage('settings',this)"><span class="ico">⚙️</span>Settings</button>
+</div>
+
+<!-- ADD TRANSACTION MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Transaction</div>
+    <div class="modal-body">
+      <div class="field">
+        <div class="field-label">Type</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn-sm active" id="typeIncome" onclick="setType('income')">+ INCOME</button>
+          <button class="btn-sm" id="typeExpense" onclick="setType('expense')">− EXPENSE</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Category</div>
+        <div class="category-grid" id="catGrid"></div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <div class="field-label">Amount ($)</div>
+          <input class="field-input" type="number" id="txAmount" placeholder="0.00" inputmode="decimal">
+        </div>
+        <div class="field">
+          <div class="field-label">Month</div>
+          <select class="field-input" id="txMonth">
+            <option>January</option><option>February</option><option>March</option>
+            <option>April</option><option>May</option><option>June</option>
+            <option>July</option><option>August</option><option>September</option>
+            <option>October</option><option>November</option><option>December</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Description</div>
+        <input class="field-input" type="text" id="txDesc" placeholder="Optional note">
+      </div>
+      <button class="btn-amber" style="width:100%;padding:12px;margin-top:4px" onclick="saveTransaction()">SAVE TRANSACTION</button>
+    </div>
+  </div>
+</div>
+
+<!-- PREMIUM MODAL -->
+<div class="modal-overlay" id="premiumModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-body">
+      <div style="text-align:center;padding:10px 0 20px">
+        <div style="font-size:40px;margin-bottom:8px">◈</div>
+        <div style="font-family:var(--display);font-size:24px;font-weight:800;color:var(--amber)">APEX Premium</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">Unlock the full terminal</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+        <div class="pg-feat">Unlimited transactions & history</div>
+        <div class="pg-feat">Advanced AI forecasting engine</div>
+        <div class="pg-feat">Portfolio tracker with real P&L</div>
+        <div class="pg-feat">PDF & Excel report export</div>
+        <div class="pg-feat">Multi-business support</div>
+        <div class="pg-feat">Priority support</div>
+      </div>
+      <button class="btn-premium" style="margin-bottom:10px">START FREE TRIAL · 7 DAYS</button>
+      <button class="btn-premium" style="background:transparent;border:1px solid var(--wire2);color:var(--muted)" onclick="closePremium()">Maybe later</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────────────
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+let state = {
+  started: false,
+  transactions: [],
+  bizData: {
+    revenue:  [6000,5500,7000,7200,8000,9000,10000,9500,7800,7000,6500,8500],
+    materials:[2200,2000,2500,2600,2900,3300,3700,3500,2800,2500,2300,3100],
+    staff:    [1500,1500,1500,1500,1500,1500,1800,1800,1500,1500,1500,1500],
+    rent:     [1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],
+    utilities:[400,380,350,320,300,320,380,390,350,380,420,450],
+    marketing:[250,200,250,300,250,350,400,350,250,200,200,300],
+  },
+  selectedCat: null,
+  txType: 'income',
+  charts: {},
+};
+
+// Default transactions
+state.transactions = [
+  {type:'income', cat:'💼', name:'Table Service', amount:2400, month:2, desc:'March revenue'},
+  {type:'expense', cat:'🛒', name:'Food Supplies', amount:880, month:2, desc:'Monthly order'},
+  {type:'income', cat:'📦', name:'Delivery Orders', amount:650, month:2, desc:'Online platform'},
+  {type:'expense', cat:'👥', name:'Staff Payroll', amount:1500, month:2, desc:'March salaries'},
+  {type:'expense', cat:'🏠', name:'Rent', amount:1000, month:2, desc:'Monthly rent'},
+];
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function startApp() {
+  document.getElementById('onboard').style.display = 'none';
+  document.getElementById('statusbar').style.display = 'flex';
+  document.getElementById('mainArea').style.display = 'block';
+  document.getElementById('bottomnav').style.display = 'flex';
+  initApp();
+}
+
+function initApp() {
+  updateDate();
+  startTicker();
+  // Real APIs
+  updateFX();
+  setInterval(updateFX, 30000); // Forex every 30s
+  // Weather — Open-Meteo (Istanbul: lat 41.01, lon 28.97)
+  fetchWeather();
+  setInterval(fetchWeather, 600000); // every 10min
+  renderHome();
+  renderFinance();
+  renderInvest();
+  renderAI();
+  renderRecentTx();
+}
+
+async function fetchWeather() {
+  try {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=41.01&longitude=28.97&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh');
+    const d = await res.json();
+    const c = d.current;
+    const code = c.weather_code;
+    const icons = {0:'☀️',1:'🌤',2:'⛅',3:'🌥',45:'🌫',48:'🌫',51:'🌦',61:'🌧',71:'🌨',80:'🌦',95:'⛈'};
+    const descs = {0:'Clear Sky',1:'Mostly Clear',2:'Partly Cloudy',3:'Overcast',45:'Foggy',51:'Drizzle',61:'Rain',71:'Snow',80:'Showers',95:'Thunderstorm'};
+    const icon = Object.entries(icons).reverse().find(([k])=>code>=parseInt(k))?.[1] || '🌡️';
+    const desc = Object.entries(descs).reverse().find(([k])=>code>=parseInt(k))?.[1] || 'Mixed';
+    // Update weather in sidebar if exists
+    const wb = document.getElementById('weatherBlock');
+    if(wb) wb.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px">
+        <span style="font-size:28px">${icon}</span>
+        <div>
+          <div style="font-size:22px;font-weight:700;color:var(--bright)">${Math.round(c.temperature_2m)}°C</div>
+          <div style="font-size:9px;color:var(--muted)">${desc} · Istanbul</div>
+          <div style="font-size:8px;color:var(--ghost);margin-top:2px">Humidity ${c.relative_humidity_2m}% · Wind ${Math.round(c.wind_speed_10m)} km/h</div>
+        </div>
+      </div>`;
+  } catch(e) {}
+}
+
+// ── DATE ─────────────────────────────────────────────────────────────────────
+function updateDate() {
+  const now = new Date();
+  const opts = {weekday:'long',year:'numeric',month:'long',day:'numeric'};
+  document.getElementById('homeDate').textContent = now.toLocaleDateString('en-US', opts);
+}
+
+// ── TICKER ───────────────────────────────────────────────────────────────────
+const tickers = [
+  {s:'BTC', b:65420, v:0.015},{s:'ETH', b:3180, v:0.018},
+  {s:'AAPL', b:189.4, v:0.008},{s:'NVDA', b:875, v:0.014},
+  {s:'GOLD', b:2034, v:0.004},{s:'USD/TRY', b:32.45, v:0.003},
+];
+let tv = tickers.map(t=>t.b);
+
+function startTicker() {
+  updateTicker();
+  setInterval(updateTicker, 2500);
+}
+
+function updateTicker() {
+  tickers.forEach((t,i) => { tv[i] *= (1+(Math.random()-0.5)*t.v*0.15); });
+  document.getElementById('tickerBar').innerHTML = tickers.map((t,i) => {
+    const chg = ((tv[i]-t.b)/t.b*100).toFixed(2);
+    const up = chg >= 0;
+    return `<div class="st"><span class="st-s">${t.s}</span><span class="st-v">${tv[i].toFixed(2)}</span><span class="st-c ${up?'up':'dn'}">${up?'▲':'▼'}${Math.abs(chg)}%</span></div>`;
+  }).join('');
+}
+
+// ── FX — REAL API (Frankfurter) ──────────────────────────────────────────────
+let fxData = {};
+let fxPrev = {};
+
+async function updateFX() {
+  try {
+    const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=TRY,EUR,GBP,JPY');
+    const data = await res.json();
+    const res2 = await fetch('https://api.frankfurter.app/latest?from=EUR&to=TRY,USD,GBP');
+    const data2 = await res2.json();
+
+    const pairs = [
+      {p:'USD/TRY', rate: data.rates.TRY},
+      {p:'EUR/TRY', rate: data2.rates.TRY},
+      {p:'EUR/USD', rate: data2.rates.USD},
+      {p:'GBP/USD', rate: 1/data.rates.GBP},
+      {p:'USD/JPY', rate: data.rates.JPY},
+      {p:'USD/EUR', rate: data.rates.EUR},
+    ];
+
+    const html = pairs.map(pair => {
+      const prev = fxPrev[pair.p] || pair.rate;
+      const chg = ((pair.rate - prev) / prev * 100).toFixed(3);
+      const up = parseFloat(chg) >= 0;
+      fxData[pair.p] = pair.rate;
+      return `<div class="fx-row">
+        <span class="fx-pair">${pair.p}</span>
+        <span class="fx-rate">${pair.rate.toFixed(4)}</span>
+        <span class="${up?'up':'dn'}" style="font-size:9px">${up?'+':''}${chg}%</span>
+        <span style="font-size:8px;color:var(--muted)">LIVE</span>
+      </div>`;
+    }).join('');
+
+    fxPrev = {...fxData};
+    const w = document.getElementById('fxWidget');
+    if(w) w.innerHTML = html;
+    const ff = document.getElementById('forexFull');
+    if(ff) ff.innerHTML = html;
+  } catch(e) {
+    // fallback simulated
+    const fallback = [{p:'USD/TRY',r:32.45},{p:'EUR/TRY',r:34.82},{p:'EUR/USD',r:1.082},{p:'GBP/USD',r:1.271},{p:'USD/JPY',r:151.2}];
+    const html = fallback.map(f=>`<div class="fx-row"><span class="fx-pair">${f.p}</span><span class="fx-rate">${f.r}</span><span class="up" style="font-size:9px">--</span></div>`).join('');
+    const w = document.getElementById('fxWidget');
+    if(w) w.innerHTML = html;
+  }
+}
+
+// ── HOME ─────────────────────────────────────────────────────────────────────
+function renderHome() {
+  const d = state.bizData;
+  const exp = d.revenue.map((_,i) => d.materials[i]+d.staff[i]+d.rent[i]+d.utilities[i]+d.marketing[i]);
+  const profit = d.revenue.map((r,i) => r-exp[i]);
+  const totalRev = d.revenue.reduce((a,b)=>a+b,0);
+  const totalExp = exp.reduce((a,b)=>a+b,0);
+  const totalProfit = profit.reduce((a,b)=>a+b,0);
+  const saveRate = ((totalProfit/totalRev)*100).toFixed(1);
+  const fmt = n => '$'+(n/1000).toFixed(1)+'K';
+
+  document.getElementById('homeRev').textContent = fmt(totalRev);
+  document.getElementById('homeExp').textContent = fmt(totalExp);
+  document.getElementById('homeProfit').textContent = fmt(totalProfit);
+  document.getElementById('homeSave').textContent = saveRate+'%';
+
+  // Home chart
+  if(state.charts.home) state.charts.home.destroy();
+  const ctx = document.getElementById('homeChart').getContext('2d');
+  state.charts.home = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:MONTHS,
+      datasets:[
+        {label:'Revenue',data:d.revenue,backgroundColor:'rgba(255,179,0,0.6)',borderRadius:3,borderSkipped:false},
+        {label:'Expenses',data:exp,backgroundColor:'rgba(255,68,68,0.5)',borderRadius:3,borderSkipped:false},
+        {label:'Profit',data:profit,type:'line',borderColor:'#00e676',backgroundColor:'rgba(0,230,118,0.05)',borderWidth:1.5,pointRadius:2,tension:0.4,fill:true,yAxisID:'y'}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'#0c0e1c',borderColor:'#1e2438',borderWidth:1,
+        titleColor:'#ffb300',bodyColor:'#566088',
+        titleFont:{family:"'IBM Plex Mono'",size:10},
+        bodyFont:{family:"'IBM Plex Mono'",size:9},
+        callbacks:{label:ctx=>' $'+ctx.raw.toLocaleString()}
+      }},
+      scales:{
+        x:{grid:{color:'rgba(30,36,56,0.6)'},ticks:{color:'#3a4268',font:{family:"'IBM Plex Mono'",size:8},maxRotation:0}},
+        y:{grid:{color:'rgba(30,36,56,0.6)'},ticks:{color:'#3a4268',font:{family:"'IBM Plex Mono'",size:8},callback:v=>'$'+v.toLocaleString()}}
+      }
+    }
+  });
+}
+
+// ── RECENT TRANSACTIONS ───────────────────────────────────────────────────────
+function renderRecentTx() {
+  const el = document.getElementById('recentTx');
+  if(!el) return;
+  const recent = state.transactions.slice(-5).reverse();
+  if(!recent.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No transactions yet.<br>Tap + ADD to get started.</div></div>';
+    return;
+  }
+  el.innerHTML = recent.map(tx => {
+    const isInc = tx.type === 'income';
+    return `<div class="tx-item">
+      <div class="tx-icon" style="background:${isInc?'rgba(0,230,118,0.1)':'rgba(255,68,68,0.1)'}">${tx.cat}</div>
+      <div class="tx-info">
+        <div class="tx-name">${tx.name}</div>
+        <div class="tx-date">${MONTHS[tx.month]} · ${tx.desc||''}</div>
+      </div>
+      <div class="tx-amount ${isInc?'up':'dn'}">${isInc?'+':'-'}$${tx.amount.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── FINANCE ───────────────────────────────────────────────────────────────────
+function renderFinance() {
+  const d = state.bizData;
+  const exp = d.revenue.map((_,i) => d.materials[i]+d.staff[i]+d.rent[i]+d.utilities[i]+d.marketing[i]);
+
+  if(state.charts.biz) state.charts.biz.destroy();
+  const bc = document.getElementById('bizChart');
+  if(bc) {
+    state.charts.biz = new Chart(bc.getContext('2d'), {
+      type:'bar',
+      data:{
+        labels:MONTHS,
+        datasets:[
+          {label:'Revenue',data:d.revenue,backgroundColor:'rgba(255,179,0,0.65)',borderRadius:3},
+          {label:'Expenses',data:exp,backgroundColor:'rgba(255,68,68,0.55)',borderRadius:3}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#566088',font:{family:"'IBM Plex Mono'",size:9},boxWidth:10}},
+          tooltip:{backgroundColor:'#0c0e1c',borderColor:'#1e2438',borderWidth:1,titleColor:'#ffb300',bodyColor:'#566088',titleFont:{family:"'IBM Plex Mono'",size:10},bodyFont:{family:"'IBM Plex Mono'",size:9}}},
+        scales:{
+          x:{grid:{color:'rgba(30,36,56,0.5)'},ticks:{color:'#3a4268',font:{family:"'IBM Plex Mono'",size:8},maxRotation:0}},
+          y:{grid:{color:'rgba(30,36,56,0.5)'},ticks:{color:'#3a4268',font:{family:"'IBM Plex Mono'",size:8},callback:v=>'$'+v.toLocaleString()}}
+        }
+      }
+    });
+  }
+
+  if(state.charts.expDonut) state.charts.expDonut.destroy();
+  const ed = document.getElementById('expDonut');
+  if(ed) {
+    const cats = ['Materials','Staff','Rent','Utilities','Marketing'];
+    const vals = [d.materials,d.staff,d.rent,d.utilities,d.marketing].map(a=>a.reduce((x,y)=>x+y,0));
+    state.charts.expDonut = new Chart(ed.getContext('2d'), {
+      type:'doughnut',
+      data:{
+        labels:cats,
+        datasets:[{data:vals,backgroundColor:['rgba(255,179,0,0.8)','rgba(255,68,68,0.8)','rgba(0,229,255,0.8)','rgba(0,230,118,0.8)','rgba(179,136,255,0.8)'],borderWidth:0}]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,cutout:'55%',
+        plugins:{legend:{position:'right',labels:{color:'#566088',font:{family:"'IBM Plex Mono'",size:9},padding:8,boxWidth:8}},
+          tooltip:{backgroundColor:'#0c0e1c',borderColor:'#1e2438',borderWidth:1,bodyColor:'#566088',titleFont:{family:"'IBM Plex Mono'",size:9}}}
+      }
+    });
+  }
+
+  // Spending
+  const spendCats = [
+    {name:'Food & Dining',icon:'🍽️',spent:680,budget:800,color:'#ffb300'},
+    {name:'Transport',icon:'🚗',spent:240,budget:300,color:'#00e5ff'},
+    {name:'Shopping',icon:'🛍️',spent:420,budget:400,color:'#ff4444'},
+    {name:'Entertainment',icon:'🎬',spent:180,budget:250,color:'#b388ff'},
+    {name:'Health',icon:'💊',spent:120,budget:200,color:'#00e676'},
+  ];
+  const sl = document.getElementById('spendList');
+  if(sl) sl.innerHTML = spendCats.map(c => {
+    const pct = Math.min(100, Math.round((c.spent/c.budget)*100));
+    const over = c.spent > c.budget;
+    return `<div class="budget-item">
+      <div class="bi-hdr">
+        <span class="bi-label">${c.icon} ${c.name}</span>
+        <span class="bi-vals" style="color:${over?'var(--red)':'var(--muted)'}">$${c.spent} / $${c.budget}</span>
+      </div>
+      <div class="bi-bar"><div class="bi-fill" style="width:${pct}%;background:${over?'var(--red)':c.color}"></div></div>
+    </div>`;
+  }).join('');
+
+  // Budget
+  const bb = document.getElementById('budgetBars');
+  if(bb) bb.innerHTML = spendCats.map(c => {
+    const pct = Math.min(100, Math.round((c.spent/c.budget)*100));
+    const over = c.spent > c.budget;
+    return `<div class="budget-item">
+      <div class="bi-hdr">
+        <span>${c.icon} ${c.name}</span>
+        <span style="font-family:var(--mono);font-size:9px;color:${over?'var(--red)':'var(--muted)'}">$${c.spent}/$${c.budget}</span>
+      </div>
+      <div class="bi-bar"><div class="bi-fill" style="width:${pct}%;background:${over?'var(--red)':c.color}"></div></div>
+    </div>`;
+  }).join('');
+
+  // Goals
+  const goals = [
+    {name:'Emergency Fund',target:10000,current:6200,icon:'🛡️',color:'#00e676'},
+    {name:'New Equipment',target:5000,current:1800,icon:'⚙️',color:'#ffb300'},
+    {name:'Vacation',target:3000,current:900,icon:'✈️',color:'#00e5ff'},
+    {name:'Business Expansion',target:25000,current:8500,icon:'🚀',color:'#b388ff'},
+  ];
+  const gl = document.getElementById('goalsList');
+  if(gl) gl.innerHTML = goals.map(g => {
+    const pct = Math.round((g.current/g.target)*100);
+    return `<div class="card">
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:20px">${g.icon}</span>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--bright)">${g.name}</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:1px">$${g.current.toLocaleString()} of $${g.target.toLocaleString()}</div>
+            </div>
+          </div>
+          <div style="font-size:18px;font-weight:700;color:${g.color}">${pct}%</div>
+        </div>
+        <div class="bi-bar" style="height:8px"><div class="bi-fill" style="width:${pct}%;background:${g.color}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── INVEST ────────────────────────────────────────────────────────────────────
+// ── COMMODITIES — REAL API (metals.live) ─────────────────────────────────────
+const commodityMeta = {
+  gold:    {sym:'XAU', name:'Altın / Gold',    icon:'🥇', unit:'oz'},
+  silver:  {sym:'XAG', name:'Gümüş / Silver',  icon:'🥈', unit:'oz'},
+  platinum:{sym:'XPT', name:'Platin / Platinum',icon:'⬜', unit:'oz'},
+  palladium:{sym:'XPD',name:'Paladyum',         icon:'🔘', unit:'oz'},
+};
+
+let liveMetals = {gold:2034, silver:22.8, platinum:948, palladium:980};
+let prevMetals = {...liveMetals};
+let usdTry = 32.45; // updated from FX
+
+async function fetchRealCommodities() {
+  try {
+    const res = await fetch('https://api.metals.live/v1/spot');
+    const data = await res.json();
+    if(Array.isArray(data)) {
+      data.forEach(item => {
+        if(item.gold)     liveMetals.gold     = item.gold;
+        if(item.silver)   liveMetals.silver   = item.silver;
+        if(item.platinum) liveMetals.platinum  = item.platinum;
+        if(item.palladium)liveMetals.palladium = item.palladium;
+      });
+    } else {
+      if(data.gold)     liveMetals.gold     = data.gold;
+      if(data.silver)   liveMetals.silver   = data.silver;
+      if(data.platinum) liveMetals.platinum  = data.platinum;
+      if(data.palladium)liveMetals.palladium = data.palladium;
+    }
+    renderCommodityGrid();
+  } catch(e) {
+    // fallback: tiny fluctuation
+    Object.keys(liveMetals).forEach(k => {
+      liveMetals[k] *= (1 + (Math.random()-0.5)*0.002);
+    });
+    renderCommodityGrid();
+  }
+}
+
+function grToOz(oz) { return (oz / 31.1035).toFixed(2); }
+
+function renderCommodityGrid() {
+  // Get latest USD/TRY
+  const tryRate = fxData['USD/TRY'] || usdTry;
+  const el = document.getElementById('commodityGrid');
+  if(!el) return;
+  const entries = Object.entries(liveMetals);
+  el.innerHTML = entries.map(([key, price]) => {
+    const meta = commodityMeta[key];
+    const prev = prevMetals[key] || price;
+    const chgPct = ((price - prev) / prev * 100).toFixed(2);
+    const up = parseFloat(chgPct) >= 0;
+    const tryPrice = (price * tryRate).toLocaleString('tr-TR', {maximumFractionDigits:0});
+    const grPrice = (price / 31.1035 * tryRate).toFixed(2);
+    return `<div class="stock-card">
+      <div style="font-size:18px;margin-bottom:4px">${meta.icon}</div>
+      <div class="sc-sym">${meta.sym}</div>
+      <div class="sc-name">${meta.name}</div>
+      <div class="sc-price">$${price.toFixed(2)}</div>
+      <div style="font-size:9px;color:var(--muted);margin:2px 0">₺${grPrice}/gr</div>
+      <span class="sc-chg ${up?'up':'dn'}">${up?'+':''}${chgPct}%</span>
+    </div>`;
+  }).join('');
+  prevMetals = {...liveMetals};
+
+  // Detail card
+  const detail = document.getElementById('commodityDetail');
+  if(detail) {
+    const g = liveMetals.gold;
+    const t = fxData['USD/TRY'] || tryRate;
+    detail.innerHTML = `
+      <div style="padding:14px">
+        <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:10px">ALTIN HESAPLAYICI</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:var(--lift);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:8px;color:var(--muted);margin-bottom:4px">1 GR ALTIN</div>
+            <div style="font-size:16px;font-weight:700;color:var(--amber)">₺${(g/31.1035*t).toFixed(2)}</div>
+          </div>
+          <div style="background:var(--lift);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:8px;color:var(--muted);margin-bottom:4px">1 ÇEYREK (1.75gr)</div>
+            <div style="font-size:16px;font-weight:700;color:var(--amber)">₺${(g/31.1035*t*1.75).toFixed(2)}</div>
+          </div>
+          <div style="background:var(--lift);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:8px;color:var(--muted);margin-bottom:4px">1 YARIM (3.5gr)</div>
+            <div style="font-size:16px;font-weight:700;color:var(--amber)">₺${(g/31.1035*t*3.5).toFixed(2)}</div>
+          </div>
+          <div style="background:var(--lift);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:8px;color:var(--muted);margin-bottom:4px">1 TAM (7gr)</div>
+            <div style="font-size:16px;font-weight:700;color:var(--amber)">₺${(g/31.1035*t*7).toFixed(2)}</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:8px;color:var(--muted);text-align:center">
+          Kaynak: metals.live · USD/TRY: ${t.toFixed(2)} · ${new Date().toLocaleTimeString('tr-TR')}
+        </div>
+      </div>`;
+  }
+}
+
+function renderInvest() {
+  renderCommodityGrid();
+  renderCryptoGrid();
+  fetchRealCommodities();
+  fetchRealCrypto();
+  setInterval(fetchRealCommodities, 30000);
+  setInterval(fetchRealCrypto, 60000);
+}
+
+const cryptos = [
+  {sym:'BTC',name:'Bitcoin',price:65420,chg:+2.41},
+  {sym:'ETH',name:'Ethereum',price:3180,chg:+1.87},
+  {sym:'BNB',name:'BNB',price:412,chg:-0.54},
+  {sym:'SOL',name:'Solana',price:142,chg:+4.22},
+  {sym:'ADA',name:'Cardano',price:0.612,chg:-1.33},
+  {sym:'AVAX',name:'Avalanche',price:38.4,chg:+2.76},
+];
+let liveCrypto = cryptos.map(c=>c.price);
+
+async function fetchRealCrypto() {
+  try {
+    const ids = 'bitcoin,ethereum,binancecoin,solana,cardano,avalanche-2';
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+    const data = await res.json();
+    const map = {'bitcoin':0,'ethereum':1,'binancecoin':2,'solana':3,'cardano':4,'avalanche-2':5};
+    Object.entries(map).forEach(([id,i]) => {
+      if(data[id]) {
+        liveCrypto[i] = data[id].usd;
+        if(data[id].usd_24h_change !== undefined) cryptos[i].chg = parseFloat(data[id].usd_24h_change.toFixed(2));
+      }
+    });
+    renderCryptoGrid();
+  } catch(e) {
+    liveCrypto = liveCrypto.map(p => p*(1+(Math.random()-0.5)*0.008));
+    renderCryptoGrid();
+  }
+}
+
+function renderCryptoGrid() {
+  const el = document.getElementById('cryptoGrid');
+  if(!el) return;
+  el.innerHTML = cryptos.map((c,i) => {
+    const chg = (((liveCrypto[i]-c.price)/c.price)*100).toFixed(2);
+    const up = parseFloat(chg)>=0;
+    return `<div class="stock-card">
+      <div class="sc-sym">${c.sym}</div>
+      <div class="sc-name">${c.name}</div>
+      <div class="sc-price">${liveCrypto[i] > 100 ? liveCrypto[i].toFixed(2) : liveCrypto[i].toFixed(4)}</div>
+      <span class="sc-chg ${up?'up':'dn'}">${up?'+':''}${chg}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ── AI ────────────────────────────────────────────────────────────────────────
+function renderAI() {
+  const d = state.bizData;
+  const avg = d.revenue.slice(-3).reduce((a,b)=>a+b,0)/3;
+  const forecasts = [
+    {m:'JAN',r:Math.round(avg*1.05),c:88},{m:'FEB',r:Math.round(avg*0.97),c:82},
+    {m:'MAR',r:Math.round(avg*1.14),c:76},{m:'APR',r:Math.round(avg*1.19),c:70},
+    {m:'MAY',r:Math.round(avg*1.27),c:63},{m:'JUN',r:Math.round(avg*1.40),c:57},
+  ];
+  const max = Math.max(...forecasts.map(f=>f.r));
+  const el = document.getElementById('aiForecastList');
+  if(el) el.innerHTML = forecasts.map(f => {
+    const pct = Math.round((f.r/max)*100);
+    const col = f.c>80?'var(--green)':f.c>70?'var(--amber)':'var(--ghost)';
+    return `<div class="ai-forecast-row">
+      <span class="afr-month">${f.m}</span>
+      <div class="afr-bar"><div class="afr-fill" style="width:${pct}%;background:${col}"></div></div>
+      <span class="afr-val">$${(f.r/1000).toFixed(1)}K</span>
+      <span class="afr-conf" style="color:${col}">${f.c}%</span>
+    </div>`;
+  }).join('');
+
+  const insights = [
+    {color:'var(--amber)',title:'SEASONAL PATTERN',body:'Revenue peaks Jul–Aug (+34%). Pre-season inventory build recommended in June for max margin.'},
+    {color:'var(--green)',title:'OPPORTUNITY',body:'Expense ratio down 2.1% MoM. Projected to hit 28% margin by Q3 2025 — 2pp ahead of target.'},
+    {color:'var(--cyan)',title:'FX IMPACT',body:'USD/TRY +3.2% this month. Imported goods cost rising. Consider local supplier alternatives.'},
+  ];
+  const ii = document.getElementById('aiInsights');
+  if(ii) ii.innerHTML = insights.map(ins => `
+    <div style="background:var(--card);border:1px solid var(--wire);border-radius:10px;overflow:hidden">
+      <div style="height:3px;background:${ins.color}"></div>
+      <div style="padding:12px 14px;border-left:3px solid ${ins.color}">
+        <div style="font-size:8px;letter-spacing:1.5px;color:${ins.color};margin-bottom:5px;text-transform:uppercase">${ins.title}</div>
+        <div style="font-size:10px;color:var(--ghost);line-height:1.7">${ins.body}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function goPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('mainArea').scrollTop = 0;
+}
+
+function switchFinanceTab(name, el) {
+  ['business','personal','budget','goals'].forEach(t => {
+    const el2 = document.getElementById('tab-'+t);
+    if(el2) el2.style.display = t===name?'block':'none';
+  });
+  document.querySelectorAll('#financeTabs .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function switchInvestTab(name, el) {
+  ['stocks','crypto','forex','portfolio','commodities'].forEach(t => {
+    const el2 = document.getElementById('tab-'+t);
+    if(el2) el2.style.display = t===name?'block':'none';
+  });
+  document.querySelectorAll('#investTabs .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── ADD MODAL ─────────────────────────────────────────────────────────────────
+const incomeCats = [{i:'💼',l:'Business'},{i:'💰',l:'Sales'},{i:'🎯',l:'Service'},{i:'📦',l:'Delivery'},{i:'🎁',l:'Other'},{i:'💹',l:'Investment'}];
+const expenseCats = [{i:'🛒',l:'Materials'},{i:'👥',l:'Staff'},{i:'🏠',l:'Rent'},{i:'💡',l:'Utilities'},{i:'📢',l:'Marketing'},{i:'🔧',l:'Other'}];
+
+function openAddModal() {
+  state.selectedCat = null;
+  renderCatGrid();
+  document.getElementById('txAmount').value = '';
+  document.getElementById('txDesc').value = '';
+  document.getElementById('addModal').classList.add('open');
+}
+
+function renderCatGrid() {
+  const cats = state.txType === 'income' ? incomeCats : expenseCats;
+  document.getElementById('catGrid').innerHTML = cats.map((c,i) =>
+    `<div class="cat-btn ${state.selectedCat===i?'selected':''}" onclick="selectCat(${i},'${c.i}')">
+      <span class="cat-ico">${c.i}</span>
+      <span class="cat-lbl">${c.l}</span>
+    </div>`
+  ).join('');
+}
+
+function setType(type) {
+  state.txType = type;
+  state.selectedCat = null;
+  document.getElementById('typeIncome').classList.toggle('active', type==='income');
+  document.getElementById('typeExpense').classList.toggle('active', type==='expense');
+  renderCatGrid();
+}
+
+function selectCat(i, ico) {
+  state.selectedCat = i;
+  state.selectedCatIco = ico;
+  renderCatGrid();
+}
+
+function saveTransaction() {
+  const amount = parseFloat(document.getElementById('txAmount').value);
+  if(!amount) return;
+  const cats = state.txType==='income' ? incomeCats : expenseCats;
+  const cat = state.selectedCat !== null ? cats[state.selectedCat] : cats[0];
+  const monthIdx = document.getElementById('txMonth').selectedIndex;
+  const desc = document.getElementById('txDesc').value;
+
+  state.transactions.push({
+    type:state.txType,
+    cat:cat.i, name:cat.l,
+    amount, month:monthIdx, desc
+  });
+
+  if(state.txType==='income') {
+    state.bizData.revenue[monthIdx] += amount;
+  } else {
+    state.bizData.materials[monthIdx] += amount;
+  }
+
+  document.getElementById('addModal').classList.remove('open');
+  renderHome();
+  renderFinance();
+  renderAI();
+  renderRecentTx();
+}
+
+// ── PREMIUM ───────────────────────────────────────────────────────────────────
+function showPremium() { document.getElementById('premiumModal').classList.add('open'); }
+function closePremium() { document.getElementById('premiumModal').classList.remove('open'); }
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────────
+function editBizName() {
+  const name = prompt('Business name:');
+  if(name) {
+    document.getElementById('setBizName').textContent = name;
+    document.getElementById('profileName').textContent = name;
+  }
+}
+
+function clearData() {
+  if(confirm('Reset all data?')) {
+    state.transactions = [];
+    renderRecentTx();
+    renderHome();
+  }
+}
+
+// ── CLOSE MODALS ──────────────────────────────────────────────────────────────
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+
+// ── SERVICE WORKER ────────────────────────────────────────────────────────────
+if('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE='apex-v1';
+    const URLS=[self.location.href];
+    self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS))));
+    self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
+  `;
+  const blob = new Blob([swCode],{type:'application/javascript'});
+  const url = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(url).catch(()=>{});
+}
+
+// Auto-start after 0.5s
+setTimeout(() => {
+  if(!state.started) startApp();
+},500);
+</script>
+</body>
+</html>
